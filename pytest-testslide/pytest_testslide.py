@@ -5,9 +5,8 @@
 
 # pyre-unsafe
 
-from collections.abc import Callable, Iterator
+from typing import Any, Callable, Iterator, Optional, Type
 from types import TracebackType
-from typing import Any
 
 import pytest
 import testslide as testslide_module
@@ -26,10 +25,10 @@ class _TestSlideFixture:
 
     def __exit__(
         self,
-        exc_type: type | None,
-        exc_val: Exception | None,
-        exc_tb: TracebackType,
-    ):
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
         # pyre-fixme[16]: Module `lib` has no attribute `AggregatedExceptions`.
         aggregated_exceptions = testslide_module.bdd.lib.AggregatedExceptions()
         try:
