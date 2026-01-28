@@ -24,8 +24,7 @@ from .lib import _bail_if_private, _is_a_builtin, CoroutineValueError
 from .patch import _is_instance_method, _patch
 
 if TYPE_CHECKING:
-    from .matchers import RegexMatches  # noqa: F401
-    from .mock_constructor import _MockConstructorDSL  # noqa: F401
+    from .mock_constructor import _MockConstructorDSL  # type: ignore[unused-import]
 
 
 def mock_callable(
@@ -97,17 +96,11 @@ def unpatch_all_callable_mocks() -> None:
     This method must be called after every test unconditionally to remove all
     active mock_callable() patches.
     """
-    global \
-        register_assertion, \
-        _default_register_assertion, \
-        _call_order_assertion_registered, \
-        _received_ordered_calls, \
-        _expected_ordered_calls
-
-    register_assertion = _default_register_assertion
-    _call_order_assertion_registered = False
-    del _received_ordered_calls[:]
-    del _expected_ordered_calls[:]
+    # Reinitialize globals via the globals() dict to avoid flake8 F824 warnings
+    globals()["register_assertion"] = _default_register_assertion
+    globals()["_call_order_assertion_registered"] = False
+    globals()["_received_ordered_calls"] = []
+    globals()["_expected_ordered_calls"] = []
 
     unpatch_exceptions = []
     for unpatcher in _unpatchers:
@@ -115,13 +108,12 @@ def unpatch_all_callable_mocks() -> None:
             unpatcher()
         except Exception as e:
             unpatch_exceptions.append(e)
-    del _unpatchers[:]
+    globals()["_unpatchers"] = []
     if unpatch_exceptions:
         raise RuntimeError(f"Exceptions raised when unpatching: {unpatch_exceptions}")
 
 
 def _is_setup() -> bool:
-    global register_assertion, _default_register_assertion
     return register_assertion is not _default_register_assertion
 
 
@@ -231,8 +223,6 @@ class _BaseRunner:
         self._accept_partial_call = False
 
     def register_call(self, *args: Any, **kwargs: Any) -> None:
-        global _received_ordered_calls
-
         if self._has_order_assertion:
             _received_ordered_calls.append((self.target, self.method, self))
 
@@ -368,11 +358,7 @@ class _BaseRunner:
         register_assertion(assertion)
 
     def add_call_order_assertion(self) -> None:
-        global \
-            _call_order_assertion_registered, \
-            _received_ordered_calls, \
-            _expected_ordered_calls
-
+        global _call_order_assertion_registered
         if not _call_order_assertion_registered:
 
             def assertion() -> None:

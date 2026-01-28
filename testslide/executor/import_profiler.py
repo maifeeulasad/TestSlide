@@ -6,7 +6,7 @@
 # pyre-unsafe
 
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 # In Cinder tests, imports are lazy. We use time.time() while profiling the imports.
 # If the first time we call time.time() is inside the profiling, then we will import

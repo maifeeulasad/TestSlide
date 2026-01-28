@@ -6,7 +6,7 @@
 # pyre-unsafe
 import re
 from collections.abc import Container, Iterable, Sized
-from typing import Any as AnyType, Callable, Dict, List, NoReturn, Optional, Tuple, Type, TypeVar, Union
+from typing import Any as AnyType, Callable, Dict, List, NoReturn, Optional, TypeVar, Union
 
 
 class AlreadyChainedException(Exception):
