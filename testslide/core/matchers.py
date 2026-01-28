@@ -5,8 +5,8 @@
 
 # pyre-unsafe
 import re
-from collections.abc import Callable, Container, Iterable, Sized
-from typing import Any as AnyType, NoReturn, TypeVar
+from collections.abc import Container, Iterable, Sized
+from typing import Any as AnyType, Callable, Dict, List, NoReturn, Optional, Tuple, Type, TypeVar, Union
 
 
 class AlreadyChainedException(Exception):
@@ -108,12 +108,12 @@ class _RichComparison(Matcher):
     def __init__(
         self,
         klass: type,
-        lt: AnyType | None = None,
-        le: AnyType | None = None,
-        eq: AnyType | None = None,
-        ne: AnyType | None = None,
-        ge: AnyType | None = None,
-        gt: AnyType | None = None,
+        lt: Optional[AnyType] = None,
+        le: Optional[AnyType] = None,
+        eq: Optional[AnyType] = None,
+        ne: Optional[AnyType] = None,
+        ge: Optional[AnyType] = None,
+        gt: Optional[AnyType] = None,
     ) -> None:
         self.klass = klass
         self.lt = lt
@@ -160,12 +160,12 @@ class _FloatComparison(_RichComparison):
 
     def __init__(
         self,
-        lt: float | int | None = None,
-        le: float | int | None = None,
-        eq: float | int | None = None,
-        ne: float | int | None = None,
-        ge: float | int | None = None,
-        gt: float | int | None = None,
+        lt: Optional[Union[float, int]] = None,
+        le: Optional[Union[float, int]] = None,
+        eq: Optional[Union[float, int]] = None,
+        ne: Optional[Union[float, int]] = None,
+        ge: Optional[Union[float, int]] = None,
+        gt: Optional[Union[float, int]] = None,
     ) -> None:
         super().__init__(float, lt=lt, le=le, eq=eq, ne=ne, ge=ge, gt=gt)
 
@@ -177,12 +177,12 @@ class _IntComparison(_RichComparison):
 
     def __init__(
         self,
-        lt: float | int | None = None,
-        le: float | int | None = None,
-        eq: float | int | None = None,
-        ne: float | int | None = None,
-        ge: float | int | None = None,
-        gt: float | int | None = None,
+        lt: Optional[Union[float, int]] = None,
+        le: Optional[Union[float, int]] = None,
+        eq: Optional[Union[float, int]] = None,
+        ne: Optional[Union[float, int]] = None,
+        ge: Optional[Union[float, int]] = None,
+        gt: Optional[Union[float, int]] = None,
     ) -> None:
         super().__init__(int, lt=lt, le=le, eq=eq, ne=ne, ge=ge, gt=gt)
 
@@ -387,7 +387,7 @@ class ListContaining(_RichComparison):
         # pyre-fixme[6]: For 1st argument expected `Type[typing.Any]` but got `_Alias`.
         super().__init__(klass=list)
 
-    def __eq__(self, other: list[AnyType]) -> bool:  # type: ignore
+    def __eq__(self, other: List[AnyType]) -> bool:  # type: ignore
         return super().__eq__(other) and self.needle in other
 
     def __repr__(self) -> str:
@@ -399,7 +399,7 @@ class ListContaining(_RichComparison):
 
 
 class ListContainingAll(_RichComparison):
-    def __init__(self, subset: list[AnyType]) -> None:
+    def __init__(self, subset: List[AnyType]) -> None:
         if not isinstance(subset, list):
             raise ValueError(
                 f"ListContainingAll(...) expects a 'list' as argument while '{type(subset).__name__}' was provided"
@@ -408,7 +408,7 @@ class ListContainingAll(_RichComparison):
         # pyre-fixme[6]: For 1st argument expected `Type[typing.Any]` but got `_Alias`.
         super().__init__(klass=list)
 
-    def __eq__(self, other: list[AnyType]) -> bool:  # type: ignore
+    def __eq__(self, other: List[AnyType]) -> bool:  # type: ignore
         return super().__eq__(other) and all(x in other for x in self.subset)
 
     def __repr__(self) -> str:
@@ -420,12 +420,12 @@ class ListContainingAll(_RichComparison):
 
 
 class NotEmptyList(AnyList):
-    def __eq__(self, other: list[AnyType]) -> bool:  # type: ignore
+    def __eq__(self, other: List[AnyType]) -> bool:  # type: ignore
         return super().__eq__(other) and bool(other)
 
 
 class EmptyList(AnyList):
-    def __eq__(self, other: list[AnyType]):  # type: ignore
+    def __eq__(self, other: List[AnyType]):  # type: ignore
         return super().__eq__(other) and not bool(other)
 
 
@@ -437,17 +437,17 @@ class AnyDict(_RichComparison):
 
 
 class NotEmptyDict(AnyDict):
-    def __eq__(self, other: dict[AnyType, AnyType] | None) -> bool:  # type: ignore
+    def __eq__(self, other: Optional[Dict[AnyType, AnyType]]) -> bool:  # type: ignore
         return super().__eq__(other) and bool(other)
 
 
 class EmptyDict(AnyDict):
-    def __eq__(self, other: dict[AnyType, AnyType] | None) -> bool:  # type: ignore
+    def __eq__(self, other: Optional[Dict[AnyType, AnyType]]) -> bool:  # type: ignore
         return super().__eq__(other) and not bool(other)
 
 
 class DictContainingKeys(_RichComparison):
-    def __init__(self, expected_keys: list[AnyType]) -> None:
+    def __init__(self, expected_keys: List[AnyType]) -> None:
         if not isinstance(expected_keys, list):
             raise ValueError(
                 f"DictContainingKeys(...) expects a 'list' as argument while '{type(expected_keys).__name__}' was provided"
@@ -456,7 +456,7 @@ class DictContainingKeys(_RichComparison):
         # pyre-fixme[6]: For 1st argument expected `Type[typing.Any]` but got `_Alias`.
         super().__init__(klass=dict)
 
-    def __eq__(self, other: dict[AnyType, AnyType]) -> bool:  # type: ignore
+    def __eq__(self, other: Dict[AnyType, AnyType]) -> bool:  # type: ignore
         try:
             return super().__eq__(other) and all(
                 attr in other for attr in self.expected_keys
@@ -466,7 +466,7 @@ class DictContainingKeys(_RichComparison):
 
 
 class DictSupersetOf(_RichComparison):
-    def __init__(self, subset: dict[AnyType, AnyType]) -> None:
+    def __init__(self, subset: Dict[AnyType, AnyType]) -> None:
         if not isinstance(subset, dict):
             raise ValueError(
                 f"DictSupersetOf(...) expects a 'dict' as argument while '{type(subset).__name__}' was provided"
@@ -475,7 +475,7 @@ class DictSupersetOf(_RichComparison):
         # pyre-fixme[6]: For 1st argument expected `Type[typing.Any]` but got `_Alias`.
         super().__init__(klass=dict)
 
-    def __eq__(self, other: dict[AnyType, AnyType]) -> bool:  # type: ignore
+    def __eq__(self, other: Dict[AnyType, AnyType]) -> bool:  # type: ignore
         try:
             return super().__eq__(other) and all(
                 other[attr] == self.subset[attr] for attr in self.subset.keys()
@@ -491,7 +491,7 @@ class AnyContaining(Matcher):
     def __init__(self, needle: AnyType) -> None:
         self.needle = needle
 
-    def __eq__(self, other: Container[AnyType]) -> bool:  # type: ignore
+    def __eq__(self, other: Container) -> bool:  # type: ignore
         return self.needle in other
 
     def __repr__(self) -> str:
@@ -503,11 +503,11 @@ class AnyContaining(Matcher):
 
 
 class AnyContainingAll(Matcher):
-    def __init__(self, subset: Iterable[AnyType]) -> None:
+    def __init__(self, subset: Iterable) -> None:
         self.subset_repr = repr(subset) if subset is not None else ""
         self.subset = list(subset)
 
-    def __eq__(self, other: Container[AnyType]) -> bool:  # type: ignore
+    def __eq__(self, other: Container) -> bool:  # type: ignore
         return all(x in other for x in self.subset)
 
     def __repr__(self) -> str:
@@ -528,11 +528,11 @@ class AnyIterable(Matcher):
 
 
 class IterableWithElements(Matcher):
-    def __init__(self, elements: Iterable[AnyType]) -> None:
+    def __init__(self, elements: Iterable) -> None:
         self.elements_repr = repr(elements) if elements is not None else ""
         self.elements = list(elements)
 
-    def __eq__(self, other: Iterable[AnyType]) -> bool:  # type: ignore
+    def __eq__(self, other: Iterable) -> bool:  # type: ignore
         return self.elements == list(other)
 
     def __repr__(self) -> str:

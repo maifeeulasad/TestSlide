@@ -7,10 +7,10 @@
 
 import functools
 import inspect
-from collections.abc import Callable
+from typing import Callable
 from functools import partial
 from re import sub as _sub
-from typing import Any, NoReturn
+from typing import Any, NoReturn, Optional, Union
 
 from testslide.core import TestCase
 
@@ -58,7 +58,7 @@ class _DSLContext:
 
     def __init__(
         self,
-        current_context: _Context | None = None,
+        current_context: Optional[_Context] = None,
         skip: bool = False,
         focus: bool = False,
     ) -> None:
@@ -91,7 +91,7 @@ class _DSLContext:
         )
         return self._not_callable
 
-    def __call__(self, arg: str | ExampleFunction) -> partial | HaltingFunction:
+    def __call__(self, arg: Union[str, ExampleFunction]) -> Union[partial, HaltingFunction]:
         if callable(arg):
             context_code = arg
             name = self._name_from_function(context_code)
@@ -106,7 +106,7 @@ class _DSLContext:
 
     # nested contexts
 
-    def sub_context(self, arg: str | ExampleFunction) -> partial | HaltingFunction:
+    def sub_context(self, arg: Union[str, ExampleFunction]) -> Union[partial, HaltingFunction]:
         self._reset()
         return self(arg)
 
@@ -125,7 +125,7 @@ class _DSLContext:
     @_require_context("create example")
     def _create_example(
         self,
-        name: str | None,
+        name: Optional[str],
         example_code: ExampleFunction,
         skip: bool,
         focus: bool,
@@ -138,11 +138,11 @@ class _DSLContext:
 
     def example(
         self,
-        arg: str | ExampleFunction | None = None,
+        arg: Union[str, ExampleFunction, None] = None,
         skip: bool = False,
         focus: bool = False,
         skip_unless: bool = True,
-    ) -> partial | HaltingFunction:
+    ) -> Union[partial, HaltingFunction]:
         skip = skip or not skip_unless
         if callable(arg):
             example_code = arg
@@ -152,10 +152,10 @@ class _DSLContext:
             name = arg  # type: ignore
             return functools.partial(self._create_example, name, skip=skip, focus=focus)
 
-    def xexample(self, arg: str | ExampleFunction) -> HaltingFunction:
+    def xexample(self, arg: Union[str, ExampleFunction]) -> HaltingFunction:
         return self.example(arg, skip=True)
 
-    def fexample(self, arg: str | ExampleFunction) -> HaltingFunction:
+    def fexample(self, arg: Union[str, ExampleFunction]) -> HaltingFunction:
         return self.example(arg, focus=True)
 
     # Shared contexts
@@ -168,7 +168,7 @@ class _DSLContext:
         self.current_context.add_shared_context(name, shared_context_code)  # type: ignore
         return self._not_callable
 
-    def shared_context(self, arg: str | ExampleFunction) -> partial | HaltingFunction:
+    def shared_context(self, arg: Union[str, ExampleFunction]) -> Union[partial, HaltingFunction]:
         if callable(arg):
             shared_context_code = arg
             name = self._name_from_function(shared_context_code)
@@ -214,8 +214,8 @@ class _DSLContext:
     @_require_context("create memoizable attributes")
     def memoize(
         self,
-        name_or_code: str | ExampleFunction | None = None,
-        memoizable_code: ExampleFunction | None = None,
+        name_or_code: Union[str, ExampleFunction, None] = None,
+        memoizable_code: Optional[ExampleFunction] = None,
         **kwargs: Any,
     ) -> HaltingFunction:
         _memoizable_code: ExampleFunction
@@ -240,8 +240,8 @@ class _DSLContext:
     @_require_context("create a memoize before attribute")
     def memoize_before(
         self,
-        name_or_code: str | ExampleFunction,
-        memoizable_code: ExampleFunction | None = None,
+        name_or_code: Union[str, ExampleFunction],
+        memoizable_code: Optional[ExampleFunction] = None,
     ) -> HaltingFunction:
         _memoizable_code: ExampleFunction
         if memoizable_code:  # Got a lambda

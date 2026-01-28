@@ -5,16 +5,17 @@
 
 # pyre-unsafe
 import collections.abc as abc
+import contextlib
 import functools
 import inspect
 import os
 import sys
 import unittest.mock
-from collections.abc import Callable
+from typing import Callable
 from functools import wraps
 from inspect import Traceback
 from types import FrameType
-from typing import Any, TYPE_CHECKING, Union
+from typing import Any, Dict, Optional, Tuple, Type, TYPE_CHECKING, Union
 from unittest.mock import Mock
 
 import typeguard
@@ -77,21 +78,21 @@ class WrappedMock(unittest.mock.NonCallableMock):
         return typeguard._utils.qualified_name(self._spec_class)
 
 
-def _extract_NonCallableMock_template(mock_obj: Mock) -> Any | None:
+def _extract_NonCallableMock_template(mock_obj: Mock) -> Optional[Any]:
     if "_spec_class" in mock_obj.__dict__ and mock_obj._spec_class is not None:
         return mock_obj._spec_class
 
     return None
 
 
-MOCK_TEMPLATE_EXTRACTORS: dict[type, Callable[[Mock], Any | None]] = {
+MOCK_TEMPLATE_EXTRACTORS: "Dict[type, Callable[[Mock], Optional[Any]]]" = {
     unittest.mock.NonCallableMock: _extract_NonCallableMock_template
 }
 
 
 def _extract_mock_template(
     mock: Union[Mock, "StrictMock"],
-) -> type[str] | type[dict] | type[int] | None:
+) -> Union[Type[str], Type[dict], Type[int], None]:
     template = None
     for mock_class, extract_mock_template in MOCK_TEMPLATE_EXTRACTORS.items():
         if isinstance(mock, mock_class):
@@ -118,7 +119,7 @@ def _is_a_builtin(obj: Any) -> bool:
     )
 
 
-def _get_caller_vars() -> tuple[dict[str, Any], dict[str, Any]]:
+def _get_caller_vars() -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Retrieves the globals and locals of the first frame that is not from TestSlide code.
     """
@@ -148,7 +149,7 @@ def _validate_callable_signature(
     template: Any,
     attr_name: str,
     args: Any,
-    kwargs: dict[str, Any],
+    kwargs: Dict[str, Any],
 ) -> bool:
     # python stdlib tests have to exempt some builtins for signature validation tests
     # they use a giant allow/deny list, which is impractical here so just ignore
@@ -190,7 +191,7 @@ def _validate_argument_type(expected_type: type, name: str, value: Any) -> None:
         return original_qualified_name(obj)
 
     # We wrap the internal check because this is recursively called
-    # in typeguard for nested types like Dict[str, Union[str, int]]
+    # in typeguard for nested types like Dict[str, Union[str, int]],
     def wrapped_check_type_internal(
         inner_value: Any, inner_expected_type: type, memo: typeguard.TypeCheckMemo
     ) -> None:
@@ -215,14 +216,17 @@ def _validate_argument_type(expected_type: type, name: str, value: Any) -> None:
     globals, locals = _get_caller_vars()
     memo = typeguard.TypeCheckMemo(globals, locals)
 
-    with (
-        unittest.mock.patch.object(
-            typeguard._checkers, "check_type_internal", new=wrapped_check_type_internal
-        ),
-        unittest.mock.patch.object(
-            typeguard._utils, "qualified_name", new=wrapped_qualified_name
-        ),
-    ):
+    with contextlib.ExitStack() as stack:
+        stack.enter_context(
+            unittest.mock.patch.object(
+                typeguard._checkers, "check_type_internal", new=wrapped_check_type_internal
+            )
+        )
+        stack.enter_context(
+            unittest.mock.patch.object(
+                typeguard._utils, "qualified_name", new=wrapped_qualified_name
+            )
+        )
         try:
             typeguard._checkers.check_type_internal(value, expected_type, memo)
         except typeguard.TypeCheckError as type_error:
@@ -233,7 +237,7 @@ def _validate_callable_arg_types(
     skip_first_arg: bool,
     callable_template: Callable,
     args: Any,
-    kwargs: dict[str, Any],
+    kwargs: Dict[str, Any],
 ) -> None:
     argspec = inspect.getfullargspec(callable_template)
     idx_offset = 1 if skip_first_arg else 0
@@ -342,7 +346,7 @@ def _is_wrapped_for_signature_and_type_validation(value: Callable) -> bool:
 
 
 def _validate_return_type(
-    template: Mock | Callable,
+    template: Union[Mock, Callable],
     value: Any,
     caller_frame_info: Traceback,
     unwrap_template_awaitable: bool = False,

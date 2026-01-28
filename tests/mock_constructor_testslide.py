@@ -5,6 +5,7 @@
 
 import contextlib
 import sys
+from typing import Optional
 
 from testslide.bdd.dsl import context
 from testslide.core.lib import TypeCheckError
@@ -44,7 +45,7 @@ class Target(TargetParent):
     CLASS_ATTR = "CLASS_ATTR"
     __slots__ = ("args", "kwargs", "p2_super", "p3_super")
 
-    def __init__(self, message: str | None = None, *args, **kwargs):
+    def __init__(self, message: Optional[str] = None, *args, **kwargs):
         self.p2_super = False
         super().__init__(p2_super=True)
 

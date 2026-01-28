@@ -8,6 +8,7 @@ import os
 import subprocess
 import time
 import unittest
+from typing import List
 from unittest.mock import call, Mock, patch
 
 from testslide.bdd.dsl import context, fcontext, xcontext
@@ -38,7 +39,7 @@ class SomeTestCase(unittest.TestCase):
     Used to test TestSlide and unittest.TestCase integration.
     """
 
-    CALLS: list[str] = []
+    CALLS: List[str] = []
 
     def setUp(self):
         self.CALLS.append("setUp")
@@ -69,7 +70,7 @@ class SomeTestCase2(unittest.TestCase):
     Used to test TestSlide and unittest.TestCase integration.
     """
 
-    CALLS: list[str] = []
+    CALLS: List[str] = []
 
     def setUp(self):
         self.CALLS.append("setUp2")
