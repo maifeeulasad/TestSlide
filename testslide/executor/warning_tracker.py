@@ -13,7 +13,7 @@ import fnmatch
 import os
 import warnings
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, List, Optional, Type, Union
 
 
 @dataclass
@@ -21,10 +21,10 @@ class CapturedWarning:
     """Represents a captured warning with its context."""
 
     message: str
-    category: type[Warning]
+    category: Type[Warning]
     filename: str
     lineno: int
-    line: str | None
+    line: Optional[str]
 
     def __str__(self) -> str:
         return (
@@ -40,8 +40,8 @@ class WarningTracker:
 
     def __init__(
         self,
-        include_patterns: list[str] | None = None,
-        exclude_patterns: list[str] | None = None,
+        include_patterns: Optional[List[str]] = None,
+        exclude_patterns: Optional[List[str]] = None,
     ) -> None:
         """
         Initialize warning tracker.
@@ -54,7 +54,7 @@ class WarningTracker:
         """
         self.include_patterns = include_patterns or []
         self.exclude_patterns = exclude_patterns or []
-        self.captured_warnings: list[CapturedWarning] = []
+        self.captured_warnings: List[CapturedWarning] = []
         self._original_showwarning: Any = None
         self._active = False
 
@@ -89,12 +89,12 @@ class WarningTracker:
 
     def _custom_showwarning(
         self,
-        message: Warning | str,
-        category: type[Warning],
+        message: Union[Warning, str],
+        category: Type[Warning],
         filename: str,
         lineno: int,
         file: Any = None,
-        line: str | None = None,
+        line: Optional[str] = None,
     ) -> None:
         """
         Custom warning handler that captures warnings.
@@ -135,7 +135,7 @@ class WarningTracker:
             warnings.showwarning = self._original_showwarning
             self._original_showwarning = None
 
-    def get_warnings(self) -> list[CapturedWarning]:
+    def get_warnings(self) -> List[CapturedWarning]:
         """Get all captured warnings."""
         return self.captured_warnings.copy()
 

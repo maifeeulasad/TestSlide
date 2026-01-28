@@ -6,19 +6,19 @@
 # pyre-unsafe
 
 import inspect
-from collections.abc import Callable
-from typing import Any, Union
+from typing import Callable
+from typing import Any, Dict, Optional, Union
 
 
 class _DescriptorProxy:
     def __init__(
         self,
-        original_class_attr: Union[Callable, "_DescriptorProxy"] | None,
+        original_class_attr: Optional[Union[Callable, "_DescriptorProxy"]],
         attr_name: str,
     ) -> None:
         self.original_class_attr = original_class_attr
         self.attr_name = attr_name
-        self.instance_attr_map: dict[int, Callable] = {}
+        self.instance_attr_map: Dict[int, Callable] = {}
 
     def __set__(self, instance: object, value: Callable) -> None:
         self.instance_attr_map[id(instance)] = value

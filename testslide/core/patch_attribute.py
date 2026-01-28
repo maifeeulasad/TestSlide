@@ -5,16 +5,15 @@
 
 # pyre-unsafe
 
-from collections.abc import Callable
-from typing import Any
+from typing import Any, Callable, Dict, Tuple
 
 from testslide.core.strict_mock import StrictMock, UndefinedAttribute
 
 from .lib import _bail_if_private, _validate_argument_type
 from .patch import _patch
 
-_restore_values: dict[tuple[Any, str], Any] = {}
-_unpatchers: dict[tuple[Any, str], Callable] = {}
+_restore_values: Dict[Tuple[Any, str], Any] = {}
+_unpatchers: Dict[Tuple[Any, str], Callable] = {}
 
 
 def unpatch_all_mocked_attributes() -> None:

@@ -13,11 +13,11 @@ import random
 import re
 import sys
 import traceback
-from collections.abc import Callable
+from typing import Callable
 from contextlib import redirect_stderr, redirect_stdout
 from importlib import import_module
 from re import Pattern
-from typing import Any, cast, Union
+from typing import Any, cast, Dict, List, Optional, Union
 
 import pygments
 import pygments.formatters
@@ -164,7 +164,7 @@ class FailurePrinterMixin(ColorFormatterMixin):
 
         return os.path.abspath(os.path.dirname(__file__))
 
-    def _get_test_module_index(self, tb: traceback.StackSummary) -> int | None:
+    def _get_test_module_index(self, tb: traceback.StackSummary) -> Optional[int]:
         test_module_paths = [
             import_module(import_module_name).__file__
             # pyre-fixme[16]: `FailurePrinterMixin` has no attribute
@@ -278,7 +278,7 @@ class DSLDebugMixin:
         return ""
 
     def _dsl_print(self, example: Example, description: str, code: Callable) -> None:
-        lineno: str | int
+        lineno: Union[str, int]
         if not self.dsl_debug:  # type: ignore
             return
         name = code.__name__
@@ -354,7 +354,7 @@ class VerboseFinishMixin(ColorFormatterMixin):
     def _yellow_bright_attr(self, text: str) -> str:
         return self._ansi_attrs("33;1", text)
 
-    def _get_ascii_logo_lines(self) -> list[str]:
+    def _get_ascii_logo_lines(self) -> List[str]:
         quote = '"'
         backslash = "\\"
         return f"""
@@ -369,8 +369,8 @@ class VerboseFinishMixin(ColorFormatterMixin):
 
     def _get_summary_lines(
         self, total: int, success: int, fail: int, skip: int, not_executed_examples: int
-    ) -> list[str]:
-        summary_lines: list[str] = []
+    ) -> List[str]:
+        summary_lines: List[str] = []
 
         # pyre-fixme[16]: `VerboseFinishMixin` has no attribute `import_secs`.
         if self.import_secs and self.import_secs > 2:
@@ -422,7 +422,7 @@ class VerboseFinishMixin(ColorFormatterMixin):
 
         return summary_lines
 
-    def finish(self, not_executed_examples: list[Example]) -> None:
+    def finish(self, not_executed_examples: List[Example]) -> None:
         # pyre-fixme[16]: `ColorFormatterMixin` has no attribute `finish`.
         super().finish(not_executed_examples)
         # pyre-fixme[16]: `VerboseFinishMixin` has no attribute `results`.
@@ -433,7 +433,7 @@ class VerboseFinishMixin(ColorFormatterMixin):
         if self.results["fail"]:
             self.print_red("\nFailures:")
             for number, result in enumerate(self.results["fail"]):
-                result = cast(dict[str, Union[Example, BaseException]], result)
+                result = cast(Dict[str, Union[Example, BaseException]], result)
                 print("")
                 self.print_failed_example(  # type: ignore
                     number + 1,
@@ -520,7 +520,7 @@ class ProgressFormatter(DSLDebugMixin, SlowImportWarningMixin, FailurePrinterMix
         super().skip(example)
         self.print_yellow("S", end="")
 
-    def finish(self, not_executed_examples: list[Example]) -> None:
+    def finish(self, not_executed_examples: List[Example]) -> None:
         # pyre-fixme[16]: `DSLDebugMixin` has no attribute `finish`.
         super().finish(not_executed_examples)
         # pyre-fixme[16]: `ProgressFormatter` has no attribute `results`.
@@ -528,7 +528,7 @@ class ProgressFormatter(DSLDebugMixin, SlowImportWarningMixin, FailurePrinterMix
         if self.results["fail"] and not self.dsl_debug:
             self.print_red("\nFailures:")
             for number, result in enumerate(self.results["fail"]):
-                result = cast(dict[str, Union[Example, BaseException]], result)
+                result = cast(Dict[str, Union[Example, BaseException]], result)
                 print("")
                 self.print_failed_example(
                     number + 1,
@@ -683,16 +683,16 @@ class Runner:
 
     def __init__(
         self,
-        contexts: list[Context],
-        formatter: SlowImportWarningMixin | DocumentFormatter,
+        contexts: List[Context],
+        formatter: Union[SlowImportWarningMixin, DocumentFormatter],
         shuffle: bool = False,
-        seed: int | None = None,
+        seed: Union[int, None ]= None,
         focus: bool = False,
         fail_fast: bool = False,
         fail_if_focused: bool = False,
-        names_text_filter: str | None = None,
-        names_regex_filter: Pattern | None = None,
-        names_regex_exclude: Pattern | None = None,
+        names_text_filter: Union[str, None ]= None,
+        names_regex_filter: Union[Pattern, None ]= None,
+        names_regex_exclude: Union[Pattern, None ]= None,
         quiet: bool = False,
         slow_callback_is_not_fatal: bool = False,
         warning_tracker: Any = None,
@@ -827,7 +827,7 @@ class Runner:
         return True
 
     @property
-    def _all_examples(self) -> list[Example]:
+    def _all_examples(self) -> List[Example]:
         examples = [
             example for context in self.contexts for example in context.all_examples
         ]
@@ -838,7 +838,7 @@ class Runner:
         return examples
 
     @property
-    def _to_execute_examples(self) -> list[Example]:
+    def _to_execute_examples(self) -> List[Example]:
         examples = [
             example
             for example in self._all_examples

@@ -4,10 +4,10 @@
 # LICENSE file in the root directory of this source tree.
 
 # pyre-unsafe
+# mypy: ignore-errors
 
-from collections.abc import Callable, Iterator
+from typing import Any, Callable, Iterator, Optional, Type, List
 from types import TracebackType
-from typing import Any
 
 import pytest
 import testslide as testslide_module
@@ -20,16 +20,16 @@ class _TestSlideFixture:
 
     def __enter__(self) -> "_TestSlideFixture":
         # pyre-fixme[16]: `_TestSlideFixture` has no attribute `_assertions`.
-        self._assertions: list[Callable] = []
-        testslide_module.mock_callable.register_assertion = self._register_assertion
+        self._assertions: List[Callable] = []
+        testslide_module.mock_callable.register_assertion = self._register_assertion  # type: ignore[attr-defined]
         return self
 
     def __exit__(
         self,
-        exc_type: type | None,
-        exc_val: Exception | None,
-        exc_tb: TracebackType,
-    ):
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
         # pyre-fixme[16]: Module `lib` has no attribute `AggregatedExceptions`.
         aggregated_exceptions = testslide_module.bdd.lib.AggregatedExceptions()
         try:
@@ -41,28 +41,29 @@ class _TestSlideFixture:
                     aggregated_exceptions.append_exception(be)
 
         finally:
-            testslide_module.mock_callable.unpatch_all_callable_mocks()
-            testslide_module.mock_constructor.unpatch_all_constructor_mocks()
-            testslide_module.patch_attribute.unpatch_all_mocked_attributes()
+            testslide_module.mock_callable.unpatch_all_callable_mocks()  # type: ignore[attr-defined]
+            testslide_module.mock_constructor.unpatch_all_constructor_mocks()  # type: ignore[attr-defined]
+            testslide_module.patch_attribute.unpatch_all_mocked_attributes()  # type: ignore[attr-defined]
         if aggregated_exceptions.exceptions:
             pytest.fail(str(aggregated_exceptions), False)
+        return None
 
     @staticmethod
     def mock_callable(
         *args: Any, **kwargs: Any
-    ) -> testslide_module.mock_callable._MockCallableDSL:
+    ) -> Any:
         return testslide_module.mock_callable.mock_callable(*args, **kwargs)
 
     @staticmethod
     def mock_async_callable(
         *args: Any, **kwargs: Any
-    ) -> testslide_module.core.mock_callable._MockAsyncCallableDSL:
+    ) -> Any:
         return testslide_module.mock_callable.mock_async_callable(*args, **kwargs)
 
     @staticmethod
     def mock_constructor(
         *args: Any, **kwargs: Any
-    ) -> testslide_module.mock_constructor._MockConstructorDSL:
+    ) -> Any:
         return testslide_module.mock_constructor.mock_constructor(*args, **kwargs)
 
     @staticmethod

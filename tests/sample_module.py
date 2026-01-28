@@ -3,8 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-from collections.abc import Awaitable, Coroutine
-from typing import Any, Union
+from typing import Any, Awaitable, Coroutine, Dict, List, Optional, Tuple, Union
 
 attribute = "value"
 typedattr: str = "bruh"
@@ -28,7 +27,7 @@ class SomeClass:
         return "property_attribute"
 
     def instance_method_with_star_args(
-        self, first, *args: str, a: bool, b: int, c: int | None, d: int = 3
+        self, first, *args: str, a: bool, b: int, c: Optional[int], d: int = 3
     ) -> int:
         return 3
 
@@ -70,36 +69,36 @@ class TargetStr:
 class ParentTarget(TargetStr):
     def instance_method(
         self, arg1: str, arg2: str, kwarg1: str = "", kwarg2: str = ""
-    ) -> list[str]:
+    ) -> List[str]:
         return ["original response"]
 
     async def async_instance_method(
         self, arg1: str, arg2: str, kwarg1: str = "", kwarg2: str = ""
-    ) -> list[str]:
+    ) -> List[str]:
         return ["async original response"]
 
     @staticmethod
     def static_method(
         arg1: str, arg2: str, kwarg1: str = "", kwarg2: str = ""
-    ) -> list[str]:
+    ) -> List[str]:
         return ["original response"]
 
     @staticmethod
     async def async_static_method(
         arg1: str, arg2: str, kwarg1: str = "", kwarg2: str = ""
-    ) -> list[str]:
+    ) -> List[str]:
         return ["async original response"]
 
     @classmethod
     def class_method(
         cls, arg1: str, arg2: str, kwarg1: str = "", kwarg2: str = ""
-    ) -> list[str]:
+    ) -> List[str]:
         return ["original response"]
 
     @classmethod
     async def async_class_method(
         cls, arg1: str, arg2: str, kwarg1: str = "", kwarg2: str = ""
-    ) -> list[str]:
+    ) -> List[str]:
         return ["async original response"]
 
     async def __aiter__(self):
@@ -137,40 +136,40 @@ class CallOrderTarget:
 
 def test_function(
     arg1: str, arg2: str, kwarg1: str = "", kwarg2: str = ""
-) -> list[str]:
+) -> List[str]:
     "This function is used by some unit tests only"
     return ["original response"]
 
 
 async def async_test_function(
     arg1: str, arg2: str, kwarg1: str = "", kwarg2: str = ""
-) -> list[str]:
+) -> List[str]:
     "This function is used by some unit tests only"
     return ["original response"]
 
 
 def test_function_returns_awaitable(
     arg1: str, arg2: str, kwarg1: str = "", kwarg2: str = ""
-) -> Awaitable[list[str]]:
+) -> Awaitable[List[str]]:
     "This function is used by some unit tests only"
     return async_test_function(arg1, arg2, kwarg1, kwarg2)
 
 
 def test_function_returns_coroutine(
     arg1: str, arg2: str, kwarg1: str = "", kwarg2: str = ""
-) -> Coroutine[Any, Any, list[str]]:
+) -> Coroutine[Any, Any, List[str]]:
     "This function is used by some unit tests only"
     return async_test_function(arg1, arg2, kwarg1, kwarg2)
 
 
-UnionArgType = dict[str, Union[str, int]]
+UnionArgType = Dict[str, Union[str, int]]
 
 
 def test_union(arg: UnionArgType) -> None:
     pass
 
 
-TupleArgType = dict[str, tuple[str, int]]
+TupleArgType = Dict[str, Tuple[str, int]]
 
 
 def test_tuple(arg: TupleArgType) -> None:
